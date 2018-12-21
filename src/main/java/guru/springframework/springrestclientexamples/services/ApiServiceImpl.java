@@ -40,21 +40,34 @@ public class ApiServiceImpl implements ApiService {
 
     @Override
     public Flux<User> getUsersReactive(Mono<Integer> limit) {
-        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder
-                .fromUriString(api_url)
-                .queryParam("limit", limit);
 
-        UserData userData = restTemplate.getForObject(uriComponentsBuilder.toUriString(), UserData.class);
-        return Flux.empty();
-//        return limit
-//                .flatMapMany(integer ->
-//                        WebClient.create("http://apifaketory.com/api/user")
-//                            .get()
-//                            .uri(uriBuilder -> uriBuilder.queryParam("limit", integer).build())
-//                            .accept(MediaType.APPLICATION_JSON)
-//                            .exchange()
-//                            .flatMap(clientResponse -> clientResponse.bodyToMono(UserData.class))
-//                            .flatMapIterable(UserData::getData)
-//                );
+        // WRONG way to do this by calling block
+        //        return WebClient
+//                .create(api_url)
+//                .get()
+//                .uri(uriBuilder -> uriBuilder.queryParam("limit", limit.block()).build())
+//                .accept(MediaType.APPLICATION_JSON)
+//                .exchange()
+//                .flatMap(resp -> resp.bodyToMono(UserData.class))
+//                .flatMapIterable(UserData::getData);
+
+//        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder
+//                .fromUriString(api_url)
+//                .queryParam("limit", limit);
+//
+//        UserData userData = restTemplate.getForObject(uriComponentsBuilder.toUriString(), UserData.class);
+//        return Flux.empty();
+
+        // RIGHT way to do this without using block
+        return limit
+                .flatMapMany(integer ->
+                        WebClient.create("http://apifaketory.com/api/user")
+                            .get()
+                            .uri(uriBuilder -> uriBuilder.queryParam("limit", integer).build())
+                            .accept(MediaType.APPLICATION_JSON)
+                            .exchange()
+                            .flatMap(clientResponse -> clientResponse.bodyToMono(UserData.class))
+                            .flatMapIterable(UserData::getData)
+                );
     }
 }

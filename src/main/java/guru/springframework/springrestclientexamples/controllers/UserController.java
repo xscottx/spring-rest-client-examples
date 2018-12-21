@@ -27,18 +27,28 @@ public class UserController {
 
     @PostMapping("/users")
     public String formPost(Model model, ServerWebExchange serverWebExchange) {
-        serverWebExchange.getFormData()
-            .subscribe(m -> {
-                String limit = m.getFirst("limit");
-                log.debug("Received limit: [" + limit + "]");
-                if (StringUtils.isEmpty(limit)) {
-                    limit = "10";
-                }
 
-                model.addAttribute("users", apiService.getUsers(Integer.valueOf(limit)));
-            });
+        // RIGHT way to do this
+        model.addAttribute("users",
+            apiService
+                .getUsersReactive(serverWebExchange
+                    .getFormData()
+                    .map(data -> Integer.valueOf(data.getFirst("limit")))));
 
-//        MultiValueMap<String, String> map = serverWebExchange.getFormData().block();
+        // ALTERNATIVE way to do this
+        //        serverWebExchange.getFormData()
+//            .subscribe(m -> {
+//                String limit = m.getFirst("limit");
+//                log.debug("Received limit: [" + limit + "]");
+//                if (StringUtils.isEmpty(limit)) {
+//                    limit = "10";
+//                }
+//
+//                model.addAttribute("users", apiService.getUsers(Integer.valueOf(limit)));
+//            });
+
+        // WRONG way to do this
+        //        MultiValueMap<String, String> map = serverWebExchange.getFormData().block();
 //        Integer limit = Integer.valueOf(map.get("limit").get(0));
 //
 //        log.debug("Received limit value: " + limit);
